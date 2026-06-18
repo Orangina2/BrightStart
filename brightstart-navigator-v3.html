@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BrightStart AI Navigator</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css" />
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --blue-50: #E6F1FB; --blue-100: #B5D4F4; --blue-200: #85B7EB;
+  --blue-400: #378ADD; --blue-600: #185FA5; --blue-800: #0C447C; --blue-900: #042C53;
+  --teal-50: #E1F5EE; --teal-100: #9FE1CB; --teal-400: #1D9E75;
+  --teal-600: #0F6E56; --teal-800: #085041;
+  --amber-50: #FAEEDA; --amber-100: #FAC775; --amber-400: #BA7517;
+  --amber-600: #854F0B; --amber-800: #633806;
+  --red-50: #FCEBEB; --red-100: #F7C1C1; --red-600: #A32D2D; --red-800: #791F1F;
+  --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-200: #B4B2A9;
+  --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #444441;
+  --surface: #ffffff;
+  --page-bg: #f5f4f0;
+  --border: rgba(0,0,0,0.10);
+  --border-mid: rgba(0,0,0,0.18);
+  --text-primary: #1a1a18;
+  --text-secondary: #5f5e5a;
+  --text-hint: #888780;
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #242422;
+    --page-bg: #1a1a18;
+    --border: rgba(255,255,255,0.10);
+    --border-mid: rgba(255,255,255,0.18);
+    --text-primary: #e8e6e0;
+    --text-secondary: #888780;
+    --text-hint: #5f5e5a;
+    --blue-50: #0d2d47; --blue-100: #1a4472; --blue-200: #1f5490;
+    --blue-400: #378ADD; --blue-600: #5DA4EF; --blue-800: #85B7EB;
+    --teal-50: #082e22; --teal-100: #0d4535; --teal-400: #1D9E75;
+    --teal-600: #3DBEA0; --teal-800: #9FE1CB;
+    --amber-50: #2e2008; --amber-100: #463210; --amber-400: #EF9F27;
+    --amber-600: #FABC4A; --amber-800: #FAC775;
+    --red-50: #2e1010; --red-100: #461818; --red-600: #F09595; --red-800: #F7C1C1;
+    --gray-50: #2a2a28; --gray-100: #3a3a37; --gray-200: #4a4a47;
+    --gray-400: #888780; --gray-600: #a8a7a0; --gray-800: #c8c6c0;
+  }
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  background: var(--page-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 260px;
+  flex-shrink: 0;
+  background: var(--surface);
+  border-right: 0.5px solid var(--border);
+  padding: 1.5rem 1rem;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.sidebar-brand { display: flex; align-items: center; gap: 10px; padding-bottom: 1rem; border-bottom: 0.5px solid var(--border); }
+.brand-icon { width: 36px; height: 36px; background: var(--blue-50); border-radius: var(--r-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.brand-icon i { font-size: 19px; color: var(--blue-600); }
+.brand-name { font-size: 13px; font-weight: 600; color: var(--text-primary); line-height: 1.3; }
+.brand-sub { font-size: 11px; color: var(--text-hint); }
+
+.sidebar-section-title { font-size: 10px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-hint); margin-bottom: 8px; }
+
+.history-empty { font-size: 12px; color: var(--text-hint); font-style: italic; padding: 6px 0; }
+
+.history-list { list-style: none; display: flex; flex-direction: column; gap: 4px; }
+.history-item {
+  display: flex; align-items: flex-start; gap: 8px;
+  padding: 8px 10px;
+  background: var(--page-bg);
+  border-radius: var(--r-md);
+  border: 0.5px solid var(--border);
+  cursor: pointer;
+  transition: border-color 0.12s;
+}
+.history-item:hover { border-color: var(--border-mid); }
+.history-item-icon { font-size: 14px; color: var(--blue-600); flex-shrink: 0; margin-top: 1px; }
+.history-item-text { flex: 1; }
+.history-item-label { font-size: 12px; font-weight: 500; color: var(--text-primary); line-height: 1.3; }
+.history-item-time { font-size: 11px; color: var(--text-hint); margin-top: 2px; }
+
+.clear-history-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--red-600);
+  background: none; border: none; cursor: pointer;
+  padding: 4px 0; font-family: inherit;
+  margin-top: 4px;
+}
+.clear-history-btn:hover { opacity: 0.7; }
+.clear-history-btn i { font-size: 14px; }
+
+.sidebar-privacy {
+  margin-top: auto;
+  background: var(--amber-50);
+  border: 0.5px solid var(--amber-100);
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+}
+.sidebar-privacy-title { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--amber-600); margin-bottom: 4px; }
+.sidebar-privacy-title i { font-size: 13px; }
+.sidebar-privacy p { font-size: 11px; color: var(--amber-800); line-height: 1.55; }
+
+.main {
+  flex: 1;
+  padding: 2rem 2rem 4rem;
+  max-width: 720px;
+}
+
+.page-header { margin-bottom: 2rem; }
+.page-eyebrow { font-size: 11px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--blue-600); margin-bottom: 6px; }
+h1 { font-size: 24px; font-weight: 700; color: var(--text-primary); line-height: 1.2; margin-bottom: 6px; }
+.page-subtitle { font-size: 14px; color: var(--text-secondary); line-height: 1.6; max-width: 540px; }
+
+.card {
+  background: var(--surface);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-xl);
+  padding: 1.25rem 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.card-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--text-hint);
+  margin-bottom: 12px;
+}
+
+.concern-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 8px;
+}
+
+.concern-btn {
+  background: var(--page-bg);
+  border: 0.5px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 12px 10px 10px;
+  cursor: pointer; text-align: left;
+  font-family: inherit;
+  transition: border-color 0.12s, background 0.12s;
+}
+.concern-btn:hover { border-color: var(--border-mid); }
+.concern-btn:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
+.concern-btn.selected { border: 2px solid var(--blue-400); background: var(--blue-50); }
+.concern-btn.selected .c-icon { color: var(--blue-600); }
+.concern-btn.selected .c-label { color: var(--blue-800); }
+.c-icon { font-size: 20px; color: var(--text-hint); margin-bottom: 7px; display: block; }
+.c-label { font-size: 12px; font-weight: 600; color: var(--text-primary); line-height: 1.4; }
+
+.error-banner {
+  display: none; align-items: center; gap: 8px;
+  background: var(--red-50); border: 0.5px solid var(--red-100);
+  border-radius: var(--r-md); padding: 10px 14px;
+  font-size: 13px; color: var(--red-600); margin-bottom: 1rem;
+}
+.error-banner.show { display: flex; }
+.error-banner i { font-size: 16px; flex-shrink: 0; }
+
+.action-row { display: flex; gap: 10px; margin-top: 12px; }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 10px 16px;
+  border-radius: var(--r-md);
+  border: 0.5px solid var(--border-mid);
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 14px; font-weight: 500;
+  cursor: pointer; font-family: inherit;
+  transition: background 0.12s;
+  white-space: nowrap;
+}
+.btn:hover { background: var(--gray-50); }
+.btn:focus-visible { outline: 2px solid var(--blue-400); outline-offset: 2px; }
+.btn:active { transform: scale(0.98); }
+.btn i { font-size: 16px; }
+.btn-primary { background: var(--blue-600); color: #fff; border-color: var(--blue-600); flex: 1; justify-content: center; }
+.btn-primary:hover { background: var(--blue-800); }
+.btn-outline { flex-shrink: 0; }
+
+.result-card { animation: fadeUp 0.22s ease both; }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+.result-header {
+  display: flex; align-items: center; gap: 10px;
+  padding-bottom: 1rem; margin-bottom: 1rem;
+  border-bottom: 0.5px solid var(--border);
+}
+.result-header-icon { font-size: 20px; color: var(--blue-600); flex-shrink: 0; }
+.result-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+
+.field-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.07em;
+  text-transform: uppercase; color: var(--text-hint);
+  margin: 1rem 0 5px;
+}
+.field-label:first-of-type { margin-top: 0; }
+
+.body-text { font-size: 14px; color: var(--text-primary); line-height: 1.7; }
+
+.steps-list { list-style: none; }
+.steps-list li {
+  font-size: 14px; color: var(--text-primary); line-height: 1.65;
+  padding: 8px 0 8px 26px; position: relative;
+  border-bottom: 0.5px solid var(--border);
+}
+.steps-list li:last-child { border-bottom: none; padding-bottom: 0; }
+.steps-list li::before {
+  content: ""; position: absolute; left: 7px; top: 16px;
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--blue-400);
+}
+
+.checklist-progress { display: flex; align-items: center; gap: 10px; margin-bottom: 1rem; }
+.prog-bar { flex: 1; height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+.prog-fill { height: 100%; background: var(--teal-400); border-radius: 99px; transition: width 0.25s ease; width: 0%; }
+.prog-label { font-size: 12px; color: var(--text-hint); white-space: nowrap; }
+
+.checklist-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 10px; }
+.cl-group { background: var(--page-bg); border: 0.5px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
+.cl-group-title {
+  font-size: 11px; font-weight: 700; color: var(--text-secondary);
+  text-transform: uppercase; letter-spacing: 0.05em;
+  display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+}
+.cl-group-title i { font-size: 14px; }
+.cl-items { list-style: none; }
+.cl-items li {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 13px; color: var(--text-primary); line-height: 1.5;
+  padding: 5px 0; border-bottom: 0.5px solid var(--border);
+  cursor: pointer; user-select: none;
+}
+.cl-items li:last-child { border-bottom: none; }
+.cl-box {
+  width: 16px; height: 16px; flex-shrink: 0;
+  border: 1.5px solid var(--border-mid); border-radius: 4px;
+  margin-top: 1px; display: flex; align-items: center; justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+.cl-items li.done .cl-box { background: var(--teal-400); border-color: var(--teal-400); }
+.cl-box i { display: none; font-size: 11px; color: #fff; }
+.cl-items li.done .cl-box i { display: block; }
+.cl-items li.done .cl-text { color: var(--text-hint); text-decoration: line-through; }
+.cl-text { flex: 1; }
+
+.disclaimer-card {
+  background: var(--amber-50); border: 0.5px solid var(--amber-100);
+  border-radius: var(--r-lg); padding: 1rem 1.25rem; margin-top: 1rem;
+}
+.disclaimer-title { display: flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; color: var(--amber-600); margin-bottom: 6px; }
+.disclaimer-title i { font-size: 16px; }
+.disclaimer-body { font-size: 13px; color: var(--amber-800); line-height: 1.65; }
+.disclaimer-body p + p { margin-top: 6px; }
+
+.term {
+  border-bottom: 1px dashed var(--blue-400);
+  cursor: help; position: relative;
+  color: inherit;
+}
+.tooltip-wrap { position: relative; display: inline; }
+.tooltip {
+  display: none;
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--gray-800); color: var(--page-bg);
+  font-size: 12px; line-height: 1.5; font-weight: 400;
+  padding: 7px 10px; border-radius: var(--r-md);
+  width: 220px; z-index: 100; pointer-events: none;
+  white-space: normal; text-align: left;
+}
+.tooltip::after {
+  content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  border: 5px solid transparent; border-top-color: var(--gray-800);
+}
+.tooltip-wrap:hover .tooltip,
+.tooltip-wrap:focus-within .tooltip { display: block; }
+
+.print-hint { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-hint); margin-top: 12px; }
+.print-hint i { font-size: 14px; }
+
+@media (max-width: 700px) {
+  .layout { flex-direction: column; }
+  .sidebar { width: 100%; height: auto; position: static; flex-direction: row; flex-wrap: wrap; gap: 1rem; }
+  .sidebar-brand { border-bottom: none; padding-bottom: 0; }
+  .sidebar-privacy { margin-top: 0; }
+  .main { padding: 1.25rem 1rem 3rem; }
+  .concern-grid { grid-template-columns: repeat(2, 1fr); }
+  .checklist-grid { grid-template-columns: 1fr; }
+  .action-row { flex-direction: column; }
+  .btn-outline { order: 2; }
+}
+
+@media print {
+  .sidebar, .action-row, .page-header, .card-title, .concern-grid, .error-banner, .print-hint { display: none !important; }
+  body { background: #fff; }
+  .main { padding: 0; max-width: 100%; }
+  .card { border: 1px solid #ccc; border-radius: 4px; break-inside: avoid; margin-bottom: 16px; }
+  .checklist-grid { grid-template-columns: 1fr 1fr; }
+  .cl-group { border: 1px solid #ccc; }
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <aside class="sidebar" aria-label="History and privacy">
+    <div class="sidebar-brand">
+      <div class="brand-icon" aria-hidden="true"><i class="ti ti-baby-carriage"></i></div>
+      <div>
+        <p class="brand-name">BrightStart AI Navigator</p>
+        <p class="brand-sub">Early Intervention Guide</p>
+      </div>
+    </div>
+
+    <div>
+      <p class="sidebar-section-title">Guidance history</p>
+      <ul class="history-list" id="historyList"></ul>
+      <p class="history-empty" id="historyEmpty">No guidance generated yet.</p>
+      <button class="clear-history-btn" id="clearBtn" onclick="clearHistory()" style="display:none">
+        <i class="ti ti-trash" aria-hidden="true"></i> Clear history
+      </button>
+    </div>
+
+    <div class="sidebar-privacy">
+      <p class="sidebar-privacy-title"><i class="ti ti-shield-lock" aria-hidden="true"></i> Privacy notice</p>
+      <p>Do not enter any personal information — no names, dates of birth, or contact details. This tool is for general guidance only and does not store, transmit, or share any data.</p>
+    </div>
+  </aside>
+
+  <main class="main">
+    <h2 class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)">BrightStart AI Navigator — select a developmental concern to get early intervention guidance, a referral checklist, and printable summary</h2>
+
+    <header class="page-header">
+      <p class="page-eyebrow">Early Intervention</p>
+      <h1>BrightStart AI Navigator</h1>
+      <p class="page-subtitle">Select a developmental concern below to get guidance, a referral checklist, and a printable summary you can bring to your first appointment.</p>
+    </header>
+
+    <div class="card">
+      <p class="card-title">What concerns you most right now?</p>
+      <div class="concern-grid" id="concernGrid">
+        <button class="concern-btn" data-key="speech" onclick="selectConcern(this)">
+          <i class="ti ti-message-circle c-icon" aria-hidden="true"></i>
+          <span class="c-label">Speech / language delay</span>
+        </button>
+        <button class="concern-btn" data-key="motor" onclick="selectConcern(this)">
+          <i class="ti ti-run c-icon" aria-hidden="true"></i>
+          <span class="c-label">Motor delay</span>
+        </button>
+        <button class="concern-btn" data-key="feeding" onclick="selectConcern(this)">
+          <i class="ti ti-apple c-icon" aria-hidden="true"></i>
+          <span class="c-label">Feeding concern</span>
+        </button>
+        <button class="concern-btn" data-key="social" onclick="selectConcern(this)">
+          <i class="ti ti-heart-handshake c-icon" aria-hidden="true"></i>
+          <span class="c-label">Social / emotional concern</span>
+        </button>
+        <button class="concern-btn" data-key="general" onclick="selectConcern(this)">
+          <i class="ti ti-baby c-icon" aria-hidden="true"></i>
+          <span class="c-label">General developmental concern</span>
+        </button>
+      </div>
+
+      <div class="error-banner" id="errorBanner" role="alert">
+        <i class="ti ti-alert-circle" aria-hidden="true"></i>
+        Please select a developmental concern above first.
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-primary" onclick="getGuidance()">
+          <i class="ti ti-sparkles" aria-hidden="true"></i> Get guidance
+        </button>
+        <button class="btn btn-outline" onclick="printSummary()" title="Print or save as PDF">
+          <i class="ti ti-printer" aria-hidden="true"></i> Print / save
+        </button>
+      </div>
+    </div>
+
+    <div id="resultsArea" aria-live="polite"></div>
+  </main>
+</div>
+
+<script>
+const CONCERNS = {
+  speech: {
+    icon: "ti-message-circle",
+    label: "Speech / language delay",
+    explanation: `Speech and language delays affect how children understand and use words to communicate. Some children may say fewer words than expected for their age, have difficulty following simple directions, or struggle to be understood by others. Early support — especially through <span class="tooltip-wrap"><span class="term" tabindex="0">speech therapy<span class="tooltip">Speech therapy (Speech-Language Pathology) helps children develop communication skills including talking, understanding language, and social communication.</span></span></span> — can make a significant difference.`,
+    steps: [
+      "Talk to your child's pediatrician about your concerns at the next well-child visit — or sooner.",
+      `Request a referral for an evaluation through your state's <span class="tooltip-wrap"><span class="term" tabindex="0">Early Intervention (EI)<span class="tooltip">Early Intervention (EI) is a federally funded program under IDEA Part C that provides free developmental services to children under age 3 and their families.</span></span></span> program for children under age 3.`,
+      "Contact your state EI program directly — a doctor's referral is not required in most states.",
+      "Keep a simple log of the words your child says and how they communicate — evaluators will find this helpful.",
+      "If your child is 3 or older, contact your local school district to request a free evaluation under IDEA Part B."
+    ]
+  },
+  motor: {
+    icon: "ti-run",
+    label: "Motor delay",
+    explanation: `Motor delays involve challenges with movement — either gross motor skills like sitting, crawling, or walking, or fine motor skills like grasping objects or using utensils. Early support through <span class="tooltip-wrap"><span class="term" tabindex="0">physical therapy<span class="tooltip">Physical therapy (PT) helps children develop strength, balance, and gross motor skills like sitting, standing, walking, and coordination.</span></span></span> or occupational therapy can help children build strength, coordination, and confidence.`,
+    steps: [
+      "Share your observations with your pediatrician, describing specific movements your child has or hasn't achieved.",
+      "Ask for a referral to a physical therapist (PT) for gross motor concerns, or an occupational therapist (OT) for fine motor concerns.",
+      `Contact your state's <span class="tooltip-wrap"><span class="term" tabindex="0">EI<span class="tooltip">Early Intervention (EI) is a federally funded program under IDEA Part C providing free services to eligible children under age 3.</span></span></span> program to request a free developmental evaluation.`,
+      "Note any changes in muscle tone, coordination, or strength to share with the evaluator.",
+      "Ask about home activities and positioning strategies you can practice while awaiting evaluation."
+    ]
+  },
+  feeding: {
+    icon: "ti-apple",
+    label: "Feeding concern",
+    explanation: `Feeding concerns in young children can include difficulty latching, slow weight gain, strong food texture aversions, frequent gagging, or refusing entire food groups. These issues often have sensory, motor, or medical roots — and respond well to early support from a trained feeding specialist, typically a speech-language pathologist or occupational therapist with specialized training.`,
+    steps: [
+      "Discuss the concern with your pediatrician, especially if your child is not gaining weight as expected.",
+      "Ask for a referral to a feeding specialist — typically a speech-language pathologist or occupational therapist with feeding expertise.",
+      `Request a feeding evaluation through <span class="tooltip-wrap"><span class="term" tabindex="0">Early Intervention<span class="tooltip">Early Intervention (EI) is a federally funded program under IDEA Part C providing free services to eligible children under age 3.</span></span></span> if your child is under age 3.`,
+      "Track which foods, textures, temperatures, and positions are most difficult — this helps the evaluation team.",
+      "Ask your pediatrician whether a gastroenterologist or registered dietitian referral is also appropriate."
+    ]
+  },
+  social: {
+    icon: "ti-heart-handshake",
+    label: "Social / emotional concern",
+    explanation: `Social and emotional development includes how children connect with others, regulate feelings, and respond to the world around them. Concerns might include limited eye contact, difficulty with transitions, intense emotional reactions, or challenges with peer play. An <span class="tooltip-wrap"><span class="term" tabindex="0">MDE<span class="tooltip">A Multidisciplinary Evaluation (MDE) is a comprehensive assessment conducted by a team of professionals across multiple developmental areas to determine EI eligibility.</span></span></span> can clarify what's happening and open the door to early, effective support.`,
+    steps: [
+      "Bring specific, concrete observations to your pediatrician — describe examples of what you've seen and how often.",
+      "Request a developmental screening such as the M-CHAT-R/F for children between 16 and 30 months.",
+      `Contact your state's Early Intervention program to request a free <span class="tooltip-wrap"><span class="term" tabindex="0">MDE<span class="tooltip">A Multidisciplinary Evaluation (MDE) is a team-based comprehensive assessment used to determine a child's EI eligibility.</span></span></span>.`,
+      "Ask whether a referral to a developmental pediatrician or child psychologist may also be helpful.",
+      "Check with your child's childcare or preschool — their observations across settings are valuable to evaluators."
+    ]
+  },
+  general: {
+    icon: "ti-baby",
+    label: "General developmental concern",
+    explanation: `Sometimes families sense that something feels different without being sure exactly where the concern lies. That instinct is worth acting on. Early Intervention programs evaluate the whole child across all developmental domains, and after a full <span class="tooltip-wrap"><span class="term" tabindex="0">MDE<span class="tooltip">A Multidisciplinary Evaluation (MDE) is a comprehensive team-based assessment used to determine eligibility for Early Intervention services.</span></span></span>, eligible children receive a personalized <span class="tooltip-wrap"><span class="term" tabindex="0">IFSP<span class="tooltip">An Individualized Family Service Plan (IFSP) is a written plan created with families that outlines a child's EI services, goals, and the supports the family will receive.</span></span></span> outlining their services and goals.`,
+    steps: [
+      "Start with your pediatrician — share what you've noticed and ask for a formal developmental screening.",
+      "Trust your instincts: caregivers often notice developmental differences before professionals do.",
+      `Contact your state's <span class="tooltip-wrap"><span class="term" tabindex="0">EI<span class="tooltip">Early Intervention (EI) is a federally funded program under IDEA Part C providing free developmental services to eligible children under age 3.</span></span></span> program to request a free, comprehensive evaluation.`,
+      "Write down your observations before appointments: what you've noticed, when it started, and in which settings.",
+      `Ask about the evaluation timeline — evaluations are typically free and completed within 45 days. If eligible, you'll work with a team to build an <span class="tooltip-wrap"><span class="term" tabindex="0">IFSP<span class="tooltip">An Individualized Family Service Plan (IFSP) outlines your child's goals, the services they'll receive, and the supports available to your family.</span></span></span>.`
+    ]
+  }
+};
+
+const CHECKLIST = [
+  { group: "Child information", icon: "ti-baby", items: ["Child's full legal name","Date of birth and gestational age if premature","Primary language spoken at home","Current childcare or preschool setting (if any)"] },
+  { group: "Parent / guardian contact", icon: "ti-user", items: ["Parent or guardian name(s)","Home address and phone number","Preferred language for communication","Best time and method to reach you"] },
+  { group: "Pediatrician information", icon: "ti-stethoscope", items: ["Pediatrician's name and practice","Phone and fax number","Date of most recent well-child visit","Any recent referrals or screenings completed"] },
+  { group: "Insurance information", icon: "ti-id-badge", items: ["Insurance provider name and plan type","Member ID and group number","Medicaid or CHIP enrollment (if applicable)","Note: EI evaluations are free regardless of insurance"] },
+  { group: "Description of concerns", icon: "ti-notes", items: ["When you first noticed the concern","Specific behaviors or milestones of concern","How often and in what situations it occurs","What, if anything, seems to help"] },
+  { group: "Prior evaluations or reports", icon: "ti-file-text", items: ["Any previous developmental evaluations","Hospital or NICU records (if applicable)","Specialist reports (neurology, audiology, GI, etc.)","School or childcare observation notes"] }
+];
+
+let selected = null;
+let checkStates = {};
+let history = [];
+
+function selectConcern(el) {
+  document.querySelectorAll('.concern-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  selected = el.dataset.key;
+  document.getElementById('errorBanner').classList.remove('show');
+}
+
+function toggleCheck(key) {
+  checkStates[key] = !checkStates[key];
+  const li = document.querySelector(`[data-ck="${key}"]`);
+  if (li) li.classList.toggle('done', checkStates[key]);
+  updateProgress();
+}
+
+function updateProgress() {
+  const total = CHECKLIST.reduce((s, g) => s + g.items.length, 0);
+  const done = Object.values(checkStates).filter(Boolean).length;
+  const pct = Math.round(done / total * 100);
+  const fill = document.getElementById('progFill');
+  const lbl = document.getElementById('progLabel');
+  if (fill) fill.style.width = pct + '%';
+  if (lbl) lbl.textContent = done + ' of ' + total + ' items ready';
+}
+
+function buildChecklist() {
+  const total = CHECKLIST.reduce((s, g) => s + g.items.length, 0);
+  const groups = CHECKLIST.map((g, gi) => {
+    const items = g.items.map((item, ii) => {
+      const key = gi + '-' + ii;
+      const done = checkStates[key] ? 'done' : '';
+      const chk = checkStates[key] ? 'block' : 'none';
+      return `<li class="${done}" data-ck="${key}" onclick="toggleCheck('${key}')">
+        <span class="cl-box" aria-hidden="true"><i class="ti ti-check" style="display:${chk}"></i></span>
+        <span class="cl-text">${item}</span>
+      </li>`;
+    }).join('');
+    return `<div class="cl-group">
+      <p class="cl-group-title"><i class="ti ${g.icon}" aria-hidden="true"></i>${g.group}</p>
+      <ul class="cl-items">${items}</ul>
+    </div>`;
+  }).join('');
+
+  return `<div class="checklist-progress">
+    <div class="prog-bar"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+    <span class="prog-label" id="progLabel">0 of ${total} items ready</span>
+  </div>
+  <div class="checklist-grid">${groups}</div>
+  <p class="print-hint"><i class="ti ti-printer" aria-hidden="true"></i> Press Ctrl+P (or Cmd+P on Mac) to print this page or save it as a PDF.</p>`;
+}
+
+function addToHistory(key) {
+  const d = CONCERNS[key];
+  const now = new Date();
+  const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  history.unshift({ key, label: d.label, icon: d.icon, time });
+  if (history.length > 8) history.pop();
+  renderHistory();
+}
+
+function renderHistory() {
+  const list = document.getElementById('historyList');
+  const empty = document.getElementById('historyEmpty');
+  const clearBtn = document.getElementById('clearBtn');
+  if (!history.length) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    clearBtn.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  clearBtn.style.display = 'flex';
+  list.innerHTML = history.map((h, i) =>
+    `<li class="history-item" onclick="replayHistory(${i})" title="View this guidance again">
+      <i class="ti ${h.icon} history-item-icon" aria-hidden="true"></i>
+      <div class="history-item-text">
+        <p class="history-item-label">${h.label}</p>
+        <p class="history-item-time">Today at ${h.time}</p>
+      </div>
+    </li>`
+  ).join('');
+}
+
+function replayHistory(idx) {
+  const h = history[idx];
+  document.querySelectorAll('.concern-btn').forEach(b => {
+    b.classList.toggle('selected', b.dataset.key === h.key);
+  });
+  selected = h.key;
+  renderResult(h.key);
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function clearHistory() {
+  history = [];
+  renderHistory();
+}
+
+function getGuidance() {
+  if (!selected) {
+    const err = document.getElementById('errorBanner');
+    err.classList.add('show');
+    err.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  addToHistory(selected);
+  renderResult(selected);
+  document.getElementById('resultsArea').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderResult(key) {
+  const d = CONCERNS[key];
+  const steps = d.steps.map(s => `<li>${s}</li>`).join('');
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="card result-card">
+      <div class="result-header">
+        <i class="ti ${d.icon} result-header-icon" aria-hidden="true"></i>
+        <p class="result-title">${d.label}</p>
+      </div>
+      <p class="field-label">About this concern</p>
+      <p class="body-text">${d.explanation}</p>
+      <p class="field-label">Possible next steps</p>
+      <ul class="steps-list">${steps}</ul>
+    </div>
+
+    <div class="card result-card">
+      <p class="card-title">Referral readiness checklist</p>
+      <p class="body-text" style="font-size:13px; color:var(--text-secondary); margin-bottom:1rem;">Gather the items below before your first call or evaluation appointment. Check each off as you go.</p>
+      ${buildChecklist()}
+    </div>
+
+    <div class="disclaimer-card result-card">
+      <p class="disclaimer-title"><i class="ti ti-shield-exclamation" aria-hidden="true"></i> Important — please read</p>
+      <div class="disclaimer-body">
+        <p>This app is for general informational purposes only. It does not diagnose any condition, and it does not determine eligibility for Early Intervention or any other services.</p>
+        <p>Do not enter personal information — no names, birthdates, or identifying details. Nothing you view here is stored or shared.</p>
+        <p>The guidance here does not replace a professional evaluation. Always consult your child's pediatrician and your state's Early Intervention program for advice specific to your child and family.</p>
+      </div>
+    </div>`;
+}
+
+function printSummary() {
+  if (!selected) {
+    const err = document.getElementById('errorBanner');
+    err.classList.add('show');
+    return;
+  }
+  window.print();
+}
+
+renderHistory();
+</script>
+</body>
+</html>
