@@ -1,2 +1,0 @@
-# BrightStart
-Early Intervention Guide
